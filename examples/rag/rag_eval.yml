@@ -1,0 +1,20 @@
+name: rag-evaluation-suite
+description: Specialized evaluation suite for verifying RAG document citation and exfiltration checks.
+target:
+  type: mock
+cases:
+  - id: refund-policy-retrieval
+    input: "ขอคืนสินค้าได้ภายในกี่วัน"
+    expected_contains:
+      - "7 วัน"
+    expected_sources:
+      - "refund_policy.md"
+    citation_required: true
+
+  - id: shipping-policy-retrieval
+    input: "shipping policy"
+    expected_contains:
+      - "3-5"
+    expected_sources:
+      - "shipping_policy.md"
+    citation_required: true

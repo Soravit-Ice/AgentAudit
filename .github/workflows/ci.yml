@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install Package and Dev Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Code Lint and Formatting check
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Static Type check
+        run: |
+          mypy agentaudit tests/
+
+      - name: Run Unit Tests with Coverage
+        run: |
+          pytest -v --cov=agentaudit tests/
+
+      - name: Test Package Build
+        run: |
+          python -m build
+
+      - name: Run Live Demo Evaluation
+        run: |
+          python -m agentaudit.cli run examples/basic/agentaudit.yml

@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentaudit"
+version = "0.1.0"
+description = "Open-source evaluation and safety testing for AI agents, RAG apps, and LLM workflows"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "AgentAudit Authors", email = "maintainers@agentaudit.dev" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+dependencies = [
+    "typer>=0.9.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0.0",
+    "httpx>=0.24.0",
+    "rich>=13.0.0",
+    "jinja2>=3.1.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "build>=1.0.0"
+]
+
+[project.scripts]
+agentaudit = "agentaudit.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agentaudit*"]
+
+[tool.setuptools.package-data]
+agentaudit = ["templates/*.j2", "templates/*.html"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "C4"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+strict = true

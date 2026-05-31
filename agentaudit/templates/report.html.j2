@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentAudit Report - {{ suite_result.name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: #161c2a;
+            --surface-hover: #1e2638;
+            --border-color: #262f45;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --success-color: #10b981;
+            --failure-color: #ef4444;
+            --warning-color: #f59e0b;
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --glass-bg: rgba(22, 28, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2rem;
+        }
+
+        .title-area h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .title-area p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .badge-status {
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-status.PASSED {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+        }
+
+        .badge-status.FAILED {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--failure-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+        }
+
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-title {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .metric-sub {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        /* SVG Circular gauge */
+        .gauge-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .gauge-svg {
+            width: 50px;
+            height: 50px;
+            transform: rotate(-90deg);
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: var(--border-color);
+            stroke-width: 4px;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke: var(--primary-color);
+            stroke-width: 4px;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s ease;
+        }
+
+        .gauge-fill.success {
+            stroke: var(--success-color);
+        }
+
+        /* Results section */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .filter-btn {
+            background-color: var(--surface-color);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Case Cards */
+        .case-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .case-card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .case-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .case-card.success-case {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .case-card.failed-case {
+            border-left: 4px solid var(--failure-color);
+        }
+
+        .case-header {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .case-header:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .case-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .case-id {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .case-badge-type {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .case-badge-type.safety {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .case-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .case-latency {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pill.PASSED {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-pill.FAILED {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--failure-color);
+        }
+
+        /* Case Body/Details */
+        .case-body {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            background-color: rgba(11, 15, 25, 0.3);
+            display: none;
+        }
+
+        .case-body.expanded {
+            display: block;
+        }
+
+        .chat-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .bubble {
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            max-width: 85%;
+        }
+
+        .bubble.input-bubble {
+            background-color: var(--surface-hover);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+        }
+
+        .bubble.output-bubble {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.03) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            align-self: flex-end;
+        }
+
+        .bubble-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .bubble-text {
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+        }
+
+        /* Sources citation */
+        .sources-box {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sources-box-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .sources-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .source-tag {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            color: var(--primary-light);
+        }
+
+        .hallucination-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Assertions table */
+        .assertions-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .assertion-row {
+            display: grid;
+            grid-template-columns: 2fr 3fr 3fr 1fr;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+            align-items: center;
+        }
+
+        .assertion-row.header-row {
+            background-color: rgba(255, 255, 255, 0.02);
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .assertion-row.success-row {
+            border-left: 2px solid var(--success-color);
+        }
+
+        .assertion-row.fail-row {
+            border-left: 2px solid var(--failure-color);
+            background-color: rgba(239, 68, 68, 0.01);
+        }
+
+        .assert-name {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            word-break: break-all;
+            padding-right: 0.5rem;
+        }
+
+        .assert-val {
+            color: var(--text-secondary);
+            word-break: break-all;
+            padding-right: 0.5rem;
+        }
+
+        .assert-val.actual-fail {
+            color: var(--failure-color);
+        }
+
+        .assert-status {
+            font-weight: 600;
+            justify-self: end;
+        }
+
+        .assert-status.PASSED {
+            color: var(--success-color);
+        }
+
+        .assert-status.FAILED {
+            color: var(--failure-color);
+        }
+
+        .assert-reason {
+            grid-column: 1 / span 4;
+            padding-top: 0.5rem;
+            color: var(--failure-color);
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 5rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 2rem;
+        }
+
+        footer a {
+            color: var(--primary-light);
+            text-decoration: none;
+        }
+
+        /* Arrow indicator */
+        .arrow-icon {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .case-header.active-header .arrow-icon {
+            transform: rotate(90deg);
+        }
+
+        @media (max-width: 768px) {
+            .assertion-row {
+                grid-template-columns: 1fr;
+                gap: 0.35rem;
+                padding: 1rem;
+            }
+
+            .assertion-row.header-row {
+                display: none;
+            }
+
+            .assert-status {
+                justify-self: start;
+                margin-top: 0.25rem;
+            }
+
+            .assert-reason {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="title-area">
+                <h1>{{ suite_result.name }}</h1>
+                <p>{{ suite_result.description or "AgentAudit AI evaluation test run" }}</p>
+            </div>
+            <div>
+                <span class="badge-status {{ suite_result.status }}">
+                    {% if suite_result.status == 'PASSED' %}
+                        ✓ Passed
+                    {% else %}
+                        ✗ Failed
+                    {% endif %}
+                </span>
+            </div>
+        </header>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <!-- Accuracy Gauge -->
+            <div class="metric-card">
+                <span class="metric-title">Accuracy Score</span>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 36 36">
+                        <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="gauge-fill {% if suite_result.accuracy >= 80 %}success{% endif %}" 
+                              stroke-dasharray="{{ suite_result.accuracy }}, 100" 
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="metric-value">{{ "%.1f"|format(suite_result.accuracy) }}%</span>
+                </div>
+                <span class="metric-sub">{{ suite_result.passed }} of {{ suite_result.total_cases }} cases passed</span>
+            </div>
+
+            <!-- Safety Score Gauge -->
+            <div class="metric-card">
+                <span class="metric-title">Safety Score</span>
+                {% if suite_result.safety_score is not none %}
+                    <div class="gauge-container">
+                        <svg class="gauge-svg" viewBox="0 0 36 36">
+                            <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="gauge-fill {% if suite_result.safety_score >= 90 %}success{% endif %}" 
+                                  stroke-dasharray="{{ suite_result.safety_score }}, 100" 
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <span class="metric-value">{{ "%.1f"|format(suite_result.safety_score) }}%</span>
+                    </div>
+                    <span class="metric-sub">Defensive prompt injection checks</span>
+                {% else %}
+                    <div class="metric-value">N/A</div>
+                    <span class="metric-sub">No safety cases in suite</span>
+                {% endif %}
+            </div>
+
+            <!-- Latency -->
+            <div class="metric-card">
+                <span class="metric-title">Average Latency</span>
+                <span class="metric-value">{{ "%.0f"|format(suite_result.average_latency) }}ms</span>
+                <span class="metric-sub">Across all chatbot calls</span>
+            </div>
+
+            <!-- Meta details -->
+            <div class="metric-card">
+                <span class="metric-title">Run Duration</span>
+                <span class="metric-value">{{ "%.2f"|format(suite_result.duration_seconds) }}s</span>
+                <span class="metric-sub">Target type: <code style="font-family: var(--font-mono); color: var(--primary-light);">{{ suite_result.target_type }}</code></span>
+            </div>
+        </div>
+
+        <!-- Section Cases Header -->
+        <div class="section-header">
+            <h2>Test Cases ({{ suite_result.total_cases }})</h2>
+            <div class="search-filter">
+                <button class="filter-btn active" onclick="filterCases('all')">All</button>
+                <button class="filter-btn" onclick="filterCases('passed')">Passed</button>
+                <button class="filter-btn" onclick="filterCases('failed')">Failed</button>
+            </div>
+        </div>
+
+        <!-- Case Cards List -->
+        <div class="case-list">
+            {% for case in suite_result.results %}
+                <div class="case-card {% if case.success %}success-casePassed{% else %}failed-caseFailed{% endif %} all-case" 
+                     id="case-{{ case.id }}">
+                    
+                    <!-- Accordion Trigger Header -->
+                    <div class="case-header" onclick="toggleAccordion('body-{{ case.id }}', this)">
+                        <div class="case-title">
+                            <span class="arrow-icon">▶</span>
+                            <span class="case-id">{{ case.id }}</span>
+                            {% if case.is_safety_case %}
+                                <span class="case-badge-type safety">Safety Check</span>
+                            {% else %}
+                                <span class="case-badge-type">Functional</span>
+                            {% endif %}
+                        </div>
+                        <div class="case-meta">
+                            <span class="case-latency">{{ "%.0f"|format(case.latency_ms) }}ms</span>
+                            <span class="status-pill {% if case.success %}PASSED{% else %}FAILED{% endif %}">
+                                {% if case.success %}passed{% else %}failed{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Accordion Collapsible Content -->
+                    <div class="case-body" id="body-{{ case.id }}">
+                        <!-- Chat Dialog -->
+                        <div class="chat-flow">
+                            <div class="bubble input-bubble">
+                                <div class="bubble-label">Prompt Input</div>
+                                <div class="bubble-text">{{ case.input }}</div>
+                            </div>
+                            <div class="bubble output-bubble">
+                                <div class="bubble-label">AI Agent Response</div>
+                                <div class="bubble-text">{{ case.output }}</div>
+                            </div>
+                        </div>
+
+                        <!-- RAG Sources citations -->
+                        {% if case.sources %}
+                            <div class="sources-box">
+                                <div class="sources-box-title">Retrieved Sources Citations</div>
+                                <ul class="sources-list">
+                                    {% for source in case.sources %}
+                                        <li class="source-tag">{{ source }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <!-- Hallucination Warning -->
+                        {% if case.hallucination_risk %}
+                            <div class="hallucination-alert">
+                                ⚠ <strong>Hallucination Risk Detected:</strong> Response misses expected citation sources or facts, or failed to return citations.
+                            </div>
+                        {% endif %}
+
+                        <!-- Assertions List Table -->
+                        <div>
+                            <div class="assertions-title">Assertion Verifications</div>
+                            <div class="assertion-row header-row">
+                                <div>Assertion Rule</div>
+                                <div>Expected Pattern</div>
+                                <div>Actual Response</div>
+                                <div class="assert-status">Outcome</div>
+                            </div>
+                            {% for assertion in case.assertions %}
+                                <div class="assertion-row {% if assertion.success %}success-row{% else %}fail-row{% endif %}">
+                                    <div class="assert-name">{{ assertion.name }}</div>
+                                    <div class="assert-val">{{ assertion.expected }}</div>
+                                    <div class="assert-val {% if not assertion.success %}actual-fail{% endif %}">{{ assertion.actual }}</div>
+                                    <div class="assert-status {% if assertion.success %}PASSED{% else %}FAILED{% endif %}">
+                                        {% if assertion.success %}PASSED{% else %}FAILED{% endif %}
+                                    </div>
+                                    {% if not assertion.success and assertion.reason %}
+                                        <div class="assert-reason">Reason: {{ assertion.reason }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Generated by <a href="https://github.com/Soravit-Ice/AgentAudit" target="_blank">AgentAudit v{{ suite_result.target_type.__class__.__name__ or '0.1.0' }}</a>. Open-source evaluation & safety testing.</p>
+        </footer>
+    </div>
+
+    <script>
+        function toggleAccordion(id, headerEl) {
+            const body = document.getElementById(id);
+            body.classList.toggle('expanded');
+            headerEl.classList.toggle('active-header');
+        }
+
+        function filterCases(filter) {
+            // Update active button state
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Toggle element visibility
+            const cards = document.querySelectorAll('.all-case');
+            cards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                } else if (filter === 'passed') {
+                    if (card.classList.contains('success-casePassed')) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                } else if (filter === 'failed') {
+                    if (card.classList.contains('failed-caseFailed')) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
