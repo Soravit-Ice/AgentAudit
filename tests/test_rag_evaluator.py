@@ -26,18 +26,14 @@ def test_expected_sources_assertion() -> None:
     )
 
     # Success: both documents retrieved
-    assertions, score, risk = evaluate_rag(
-        case, "Output", ["refund_policy.md", "shipping_policy.md", "extra.md"]
-    )
+    assertions, score, risk = evaluate_rag(case, "Output", ["refund_policy.md", "shipping_policy.md", "extra.md"])
     assert len(assertions) == 1
     assert assertions[0].success is True
     assert score == 1.0
     assert risk is False
 
     # Partial success: only one source matched
-    assertions_partial, score_partial, risk_partial = evaluate_rag(
-        case, "Output", ["refund_policy.md"]
-    )
+    assertions_partial, score_partial, risk_partial = evaluate_rag(case, "Output", ["refund_policy.md"])
     assert len(assertions_partial) == 1
     assert assertions_partial[0].success is False
     assert score_partial == 0.5

@@ -95,10 +95,18 @@ def init() -> None:
 @app.command("run")
 def run(
     path: str = typer.Argument(..., help="Path to a YAML suite file or a directory containing YAML suites."),
-    output: str = typer.Option("reports/", "--output", "-o", help="Directory where JSON, MD, and HTML reports will be saved."),
-    format: Literal["json", "md", "html", "all"] = typer.Option("all", "--format", "-f", help="Output format for the generated reports."),
-    fail_on_risk: Literal["low", "medium", "high", "none"] = typer.Option("none", "--fail-on-risk", help="Fail suite if risks are detected."),
-    fail_under_score: float = typer.Option(0.8, "--fail-under-score", help="Fail suite if accuracy falls below this decimal threshold."),
+    output: str = typer.Option(
+        "reports/", "--output", "-o", help="Directory where JSON, MD, and HTML reports will be saved."
+    ),
+    format: Literal["json", "md", "html", "all"] = typer.Option(
+        "all", "--format", "-f", help="Output format for the generated reports."
+    ),
+    fail_on_risk: Literal["low", "medium", "high", "none"] = typer.Option(
+        "none", "--fail-on-risk", help="Fail suite if risks are detected."
+    ),
+    fail_under_score: float = typer.Option(
+        0.8, "--fail-under-score", help="Fail suite if accuracy falls below this decimal threshold."
+    ),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Output detailed assertion lines for all test cases."),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress terminal printout entirely."),
 ) -> None:
@@ -186,8 +194,12 @@ def run(
 
 @app.command("report")
 def report(
-    json_path: str = typer.Argument(None, help="Path to a saved JSON report. If omitted, checks 'reports/latest_report.json'."),
-    output_dir: str = typer.Option("reports/", "--output", "-o", help="Directory where regenerated Markdown/HTML reports are saved."),
+    json_path: str = typer.Argument(
+        None, help="Path to a saved JSON report. If omitted, checks 'reports/latest_report.json'."
+    ),
+    output_dir: str = typer.Option(
+        "reports/", "--output", "-o", help="Directory where regenerated Markdown/HTML reports are saved."
+    ),
 ) -> None:
     """Reads a saved JSON report and regenerates the styled HTML and Markdown reports."""
     path_to_load = json_path or os.path.join(output_dir, "latest_report.json")

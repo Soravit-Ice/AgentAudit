@@ -62,4 +62,3 @@ def test_test_suite_validation() -> None:
     assert suite.name == "basic-test-suite"
     assert len(suite.cases) == 1
     assert suite.cases[0].id == "case-1"
-

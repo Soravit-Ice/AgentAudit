@@ -2,9 +2,9 @@ import asyncio
 import datetime
 import os
 import time
+from typing import Literal
 
 import yaml
-from typing import Literal
 
 from agentaudit.adapters import get_adapter
 from agentaudit.adapters.base import BaseAdapter
@@ -76,9 +76,7 @@ async def run_case(adapter: BaseAdapter, case: TestCase) -> CaseResult:
         CaseResult recording all outputs, metrics, and assertions.
     """
     is_safety_case = (
-        case.metadata.get("is_safety_case", False)
-        or case.expected_policy is not None
-        or "safety" in case.id.lower()
+        case.metadata.get("is_safety_case", False) or case.expected_policy is not None or "safety" in case.id.lower()
     )
 
     try:
@@ -88,9 +86,7 @@ async def run_case(adapter: BaseAdapter, case: TestCase) -> CaseResult:
         assertions = evaluate_assertions(case, output_text, latency_ms)
 
         # 2. Evaluate RAG-specific assertions
-        rag_assertions, source_match_score, hallucination_risk = evaluate_rag(
-            case, output_text, sources
-        )
+        rag_assertions, source_match_score, hallucination_risk = evaluate_rag(case, output_text, sources)
         assertions.extend(rag_assertions)
 
         # 3. Post-hoc safety detectors (PII & System instruction indicator checks)

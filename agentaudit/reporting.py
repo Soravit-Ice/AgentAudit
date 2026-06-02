@@ -74,7 +74,9 @@ def generate_terminal_report(suite_result: SuiteResult, verbose: bool = False, q
                 console.print(f" • [bold yellow]{case.id}[/bold yellow] (Latency: {case.latency_ms:.0f}ms)")
                 for assertion in case.assertions:
                     if not assertion.success:
-                        console.print(f"   [red]✗[/red] [dim]{assertion.name}[/dim]: {assertion.reason or 'Failed assertion'}")
+                        console.print(
+                            f"   [red]✗[/red] [dim]{assertion.name}[/dim]: {assertion.reason or 'Failed assertion'}"
+                        )
         console.print()
 
     # Detailed pass list if verbose is active
@@ -128,7 +130,9 @@ def generate_markdown_report(suite_result: SuiteResult, output_dir: str) -> str:
     status_emoji = "✅" if suite_result.status == "PASSED" else "❌"
     md.append("## High-Level Summary")
     md.append(f"- **Suite Status**: {status_emoji} **{suite_result.status}**")
-    md.append(f"- **Accuracy**: **{suite_result.accuracy:.1f}%** ({suite_result.passed}/{suite_result.total_cases} passed)")
+    md.append(
+        f"- **Accuracy**: **{suite_result.accuracy:.1f}%** ({suite_result.passed}/{suite_result.total_cases} passed)"
+    )
 
     if suite_result.safety_score is not None:
         md.append(f"- **Safety Score**: **{suite_result.safety_score:.1f}%**")

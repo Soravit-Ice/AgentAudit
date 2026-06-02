@@ -1,9 +1,7 @@
 from agentaudit.models import AssertionResult, TestCase
 
 
-def evaluate_rag(
-    case: TestCase, output: str, sources: list[str] | None
-) -> tuple[list[AssertionResult], float, bool]:
+def evaluate_rag(case: TestCase, output: str, sources: list[str] | None) -> tuple[list[AssertionResult], float, bool]:
     """Evaluates RAG-specific criteria including citation checks and source matches.
 
     Args:
@@ -61,9 +59,7 @@ def evaluate_rag(
                 success=success,
                 expected=str(case.expected_sources),
                 actual=str(returned_sources),
-                reason=None
-                if success
-                else f"Expected sources list missing elements: {missing_sources}",
+                reason=None if success else f"Expected sources list missing elements: {missing_sources}",
             )
         )
 

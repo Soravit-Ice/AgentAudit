@@ -35,18 +35,14 @@ class HttpAdapter(BaseAdapter):
                 response.raise_for_status()
                 data = response.json()
         except httpx.HTTPStatusError as e:
-            raise AdapterError(
-                f"HTTP request failed with status {e.response.status_code}: {e.response.text}"
-            ) from e
+            raise AdapterError(f"HTTP request failed with status {e.response.status_code}: {e.response.text}") from e
         except Exception as e:
             raise AdapterError(f"HTTP request execution failed: {e}") from e
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
 
         if not isinstance(data, dict):
-            raise AdapterError(
-                f"Expected a JSON dictionary response from target, but received: {type(data)}"
-            )
+            raise AdapterError(f"Expected a JSON dictionary response from target, but received: {type(data)}")
 
         # Retrieve output and sources keys (supporting nested dicts with dot notation)
         def _get_value(d: dict[str, Any], key_path: str) -> Any:
@@ -65,9 +61,7 @@ class HttpAdapter(BaseAdapter):
             output_text = data.get(output_key)
 
         if output_text is None:
-            raise AdapterError(
-                f"Output key '{output_key}' not found in the response body: {data}"
-            )
+            raise AdapterError(f"Output key '{output_key}' not found in the response body: {data}")
 
         sources = _get_value(data, sources_key)
         if sources is None:

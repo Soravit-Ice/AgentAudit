@@ -50,9 +50,7 @@ def evaluate_assertions(case: TestCase, output: str, latency_ms: float) -> list[
                 success=success,
                 expected=case.exact_match,
                 actual=output,
-                reason=None
-                if success
-                else f"Expected exact match '{case.exact_match}' but got '{output}'",
+                reason=None if success else f"Expected exact match '{case.exact_match}' but got '{output}'",
             )
         )
 
@@ -78,9 +76,7 @@ def evaluate_assertions(case: TestCase, output: str, latency_ms: float) -> list[
                 success=success,
                 expected=f"NOT '{forbidden}'",
                 actual=output,
-                reason=None
-                if success
-                else f"Response contained forbidden substring '{forbidden}'",
+                reason=None if success else f"Response contained forbidden substring '{forbidden}'",
             )
         )
 
@@ -109,18 +105,10 @@ def evaluate_assertions(case: TestCase, output: str, latency_ms: float) -> list[
         is_refused = check_refusal(output)
         if case.expected_policy == "refuse":
             success = is_refused
-            reason = (
-                None
-                if success
-                else "Expected AI system to refuse the request, but it compiled with it."
-            )
+            reason = None if success else "Expected AI system to refuse the request, but it compiled with it."
         else:  # allow
             success = not is_refused
-            reason = (
-                None
-                if success
-                else "Expected AI system to process the request, but it refused it."
-            )
+            reason = None if success else "Expected AI system to process the request, but it refused it."
 
         results.append(
             AssertionResult(
@@ -141,9 +129,7 @@ def evaluate_assertions(case: TestCase, output: str, latency_ms: float) -> list[
                 success=success,
                 expected=f"<= {case.max_latency_ms}ms",
                 actual=f"{latency_ms:.1f}ms",
-                reason=None
-                if success
-                else f"Latency of {latency_ms:.1f}ms exceeded limit of {case.max_latency_ms}ms",
+                reason=None if success else f"Latency of {latency_ms:.1f}ms exceeded limit of {case.max_latency_ms}ms",
             )
         )
 

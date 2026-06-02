@@ -49,9 +49,7 @@ class CommandAdapter(BaseAdapter):
 
             if proc.returncode != 0:
                 err_msg = stderr.decode("utf-8").strip()
-                raise AdapterError(
-                    f"Command '{cmd_str}' failed (exit code {proc.returncode}): {err_msg}"
-                )
+                raise AdapterError(f"Command '{cmd_str}' failed (exit code {proc.returncode}): {err_msg}")
 
             output_raw = stdout.decode("utf-8").strip()
 
