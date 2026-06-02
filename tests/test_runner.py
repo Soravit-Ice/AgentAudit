@@ -5,7 +5,7 @@ import pytest
 import yaml
 
 from agentaudit.exceptions import ConfigurationError
-from agentaudit.models import TestSuite
+from agentaudit.models import TargetConfig, TestCase, TestSuite
 from agentaudit.runner import load_test_suite, run_suite
 
 
@@ -47,14 +47,14 @@ def test_load_test_suite_invalid() -> None:
 async def test_run_suite_mock() -> None:
     suite = TestSuite(
         name="test-run",
-        target={"type": "mock"},
+        target=TargetConfig(type="mock"),
         cases=[
-            {
-                "id": "case-1",
-                "input": "ขอคืนสินค้าได้ภายในกี่วัน",
-                "expected_contains": ["7 วัน"],
-                "expected_sources": ["refund_policy.md"],
-            }
+            TestCase(
+                id="case-1",
+                input="ขอคืนสินค้าได้ภายในกี่วัน",
+                expected_contains=["7 วัน"],
+                expected_sources=["refund_policy.md"],
+            )
         ],
     )
 
